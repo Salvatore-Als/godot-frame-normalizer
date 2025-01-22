@@ -12,7 +12,7 @@ class SpriteSheetEditor(tk.Tk):
         self.sprites = []
         self.sprite_height = 64
         self.num_columns = 4
-        self.num_rows = 4
+        self.num_rows = 1
         self.column_positions = [self.sprite_height * i for i in range(self.num_columns)]
         self.dragging_col = None
         self.original_image = None
@@ -51,8 +51,6 @@ class SpriteSheetEditor(tk.Tk):
 
         self.canvas = tk.Canvas(self.canvas_frame, width=self.width, height=500)
         self.canvas.grid(row=0, column=0)
-
-        self.canvas.bind("<Configure>", self.resize_canvas)
 
     def load_image(self):
         file_path = filedialog.askopenfilename()
@@ -104,7 +102,7 @@ class SpriteSheetEditor(tk.Tk):
             original_height = self.original_image.height
             
             # Display process image
-            self.canvas.create_image(0, original_height + 0, anchor=tk.NW, image=processed_photo)
+            self.canvas.create_image(0, original_height + 50, anchor=tk.NW, image=processed_photo)
             self.canvas.processed_image = processed_photo
             
         except Exception as e:
@@ -259,9 +257,6 @@ class SpriteSheetEditor(tk.Tk):
             self.canvas.tag_bind(f"drag_bar_{col}", "<B1-Motion>",
                                lambda event, col=col: self.dragging(event, col))
             self.canvas.tag_bind(f"drag_bar_{col}", "<ButtonRelease-1>", self.stop_drag)
-
-    def resize_canvas(self, event):
-        self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
     def start_drag(self, event, col):
         self.dragging_col = col
