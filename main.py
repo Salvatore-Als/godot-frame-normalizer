@@ -59,9 +59,17 @@ class SpriteSheetEditor(tk.Tk):
         if file_path:
             self.image_path = file_path
             self.image = Image.open(self.image_path)
-            self.original_image = self.image.copy()
+            self.original_image = self.add_margin(self.image.copy(), 20, (0, 0, 0, 0))
             self.process_sprites()
             self.display_grid()
+
+    def add_margin(self, pil_img, size, color):
+        width, height = pil_img.size
+        new_width = width + size + size
+        result = Image.new(pil_img.mode, (new_width, height), color)
+        result.paste(pil_img, (size, 0))
+
+        return result
 
     def process_sprites(self):
         self.sprites = []
@@ -115,11 +123,11 @@ class SpriteSheetEditor(tk.Tk):
         # Pixel data
         data = section.getdata()
         width, height = section.size
-        
-        # Found the first pixel that is not transparency (start of sprite)
+
         sprite_start = None
         sprite_end = None
-        
+                
+        # Found the first pixel that is not transparency (start of sprite)
         for x in range(width):
             for y in range(height):
                 pixel = data[y * width + x]
