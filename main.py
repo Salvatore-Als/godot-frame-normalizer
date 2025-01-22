@@ -124,36 +124,37 @@ class SpriteSheetEditor(tk.Tk):
         data = section.getdata()
         width, height = section.size
 
-        sprite_start = None
-        sprite_end = None
-                
         # Found the first pixel that is not transparency (start of sprite)
-        for x in range(width):
-            for y in range(height):
-                pixel = data[y * width + x]
-                if pixel[3] > 0:  # Pixel not transparency
-                    sprite_start = x
-                    break
-            if sprite_start is not None:
-                break
+        sprite_start = self.find_pixel(range(width), section, 0)
+
+        # Found the last pixel that is not transparency (end of sprite)
+        sprite_end = self.find_pixel(range(width-1, -1, -1), section, 1)
                 
-       # Found the last pixel that is not transparency (end of sprite)
-        for x in range(width-1, -1, -1):
-            for y in range(height):
-                pixel = data[y * width + x]
-                if pixel[3] > 0:  # Pixel not transparency
-                    sprite_end = x + 1
-                    break
-            if sprite_end is not None:
-                break
-        
         if sprite_start is None or sprite_end is None:
             return None
             
         # Extract sprite
         sprite = section.crop((sprite_start, 0, sprite_end, height))
         sprite_width = sprite_end - sprite_start
+
         return sprite, sprite_start, sprite_width
+
+    def find_pixel(self, rrange, section, offset):
+        value = None 
+
+        data = section.getdata()
+        width, height = section.size
+
+        for x in rrange:
+            for y in range(height):
+                pixel = data[y * width + x]
+                if pixel[3] > 0:  # Pixel not transparency
+                    value = x + offset
+                    break
+            if value is not None:
+                break
+        
+        return value
 
     def find_max_sprite_width(self):
         """
