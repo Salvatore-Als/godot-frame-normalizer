@@ -46,6 +46,9 @@ class SpriteSheetEditor(tk.Tk):
         self.process_button = tk.Button(self, text="Process", command=self.process_and_display)
         self.process_button.pack()
 
+        self.process_button = tk.Button(self, text="Export", command=self.export)
+        self.process_button.pack()
+
         self.canvas_frame = tk.Frame(self)
         self.canvas_frame.pack()
 
@@ -94,7 +97,7 @@ class SpriteSheetEditor(tk.Tk):
             
             # Create process image after original
             processed_image = self.create_processed_image()
-            
+
             # Tkinter conversion
             processed_photo = ImageTk.PhotoImage(processed_image)
             
@@ -108,6 +111,16 @@ class SpriteSheetEditor(tk.Tk):
         except Exception as e:
             print(f"Unable to process: {e}")
 
+    def crop_transparent_borders(self, image):
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+        
+        bbox = image.getbbox()
+        if bbox:
+            image = image.crop(bbox)
+        
+        return image
+        
     def find_sprite_in_section(self, start_x, end_x, row, sprite_height):
         """
         Find the sprite limit in a section by checking the colored pixels
@@ -220,6 +233,7 @@ class SpriteSheetEditor(tk.Tk):
                     # Set the sprite at calculated position
                     processed_image.paste(sprite, (int(sprite_x), row * sprite_height))
         
+        processed_image = self.crop_transparent_borders(processed_image)
         return processed_image
 
     def display_grid(self):
@@ -273,6 +287,14 @@ class SpriteSheetEditor(tk.Tk):
     def stop_drag(self, event):
         self.dragging_col = None
 
+    def export(self):
+        processed_image = self.create_processed_image()
+        file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png")])
+        
+        if file_path:
+            processed_image.save(file_path)
+
+    
 if __name__ == "__main__":
     app = SpriteSheetEditor()
     app.mainloop()
