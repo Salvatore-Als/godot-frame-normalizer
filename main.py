@@ -11,7 +11,7 @@ class SpriteSheetEditor(tk.Tk):
         self.image = None
         self.sprites = []
         self.sprite_height = 64
-        self.num_columns = 4
+        self.num_columns = 8
         self.num_rows = 1
         self.column_positions = [self.sprite_height * i for i in range(self.num_columns)]
         self.dragging_col = None
@@ -75,7 +75,7 @@ class SpriteSheetEditor(tk.Tk):
     def process_sprites(self):
         self.sprites = []
         sprite_height = int(self.sprite_size_entry.get())
-        sprite_width = sprite_height
+        sprite_width = sprite_height  # Assumption: sprite is square
         num_columns = int(self.num_columns_entry.get())
         num_rows = int(self.num_rows_entry.get())
 
@@ -85,8 +85,10 @@ class SpriteSheetEditor(tk.Tk):
         for y in range(sprite_y):
             row_sprites = []
             for x in range(sprite_x):
-                sprite = self.image.crop((x * sprite_width, y * sprite_height,
-                                        (x + 1) * sprite_width, (y + 1) * sprite_height))
+                sprite = self.image.crop((x * sprite_width, y * sprite_height, (x + 1) * sprite_width, (y + 1) * sprite_height))
+                
+                # Recalc sprite size to have desired size
+                sprite = sprite.resize((sprite_width, sprite_height))
                 row_sprites.append(sprite)
             self.sprites.append(row_sprites)
 
@@ -114,11 +116,19 @@ class SpriteSheetEditor(tk.Tk):
     def crop_transparent_borders(self, image):
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
-        
+
         bbox = image.getbbox()
+        border = self.sprite_height / 2
+    
         if bbox:
-            image = image.crop(bbox)
-        
+            left, top, right, bottom = bbox
+            
+            left = max(left - border, 0)
+            right = min(right + border, image.width)
+
+            # Recadrer l'image pour qu'elle ait 32px de transparence à gauche et à droite
+            image = image.crop((left, top, right, bottom))
+
         return image
         
     def find_sprite_in_section(self, start_x, end_x, row, sprite_height):
@@ -197,12 +207,13 @@ class SpriteSheetEditor(tk.Tk):
 
     def create_processed_image(self):
         sprite_height = int(self.sprite_size_entry.get())
+        sprite_width = sprite_height  # Assumption: sprite is square
         num_rows = int(self.num_rows_entry.get())
         
         # Find max width of sprite 
         self.max_sprite_width = self.find_max_sprite_width()
         
-        # Calcul new max witdh total of the img
+        # Calculate new max width total of the img
         sorted_positions = sorted(self.column_positions)
         num_sections = len(sorted_positions) + 1
         new_width = self.max_sprite_width * num_sections
@@ -224,8 +235,10 @@ class SpriteSheetEditor(tk.Tk):
                 if result is not None:
                     sprite, _, sprite_width = result
                     
-                    # Calcul position on the new image
-                    # CCenter sprite in the new section fixed size
+                    # Resize sprite to match the fixed dimensions (sprite_width, sprite_height)
+                    sprite = sprite.resize((sprite_width, sprite_height))
+                    
+                    # Calculate position on the new image
                     new_section_start = i * self.max_sprite_width
                     margin = (self.max_sprite_width - sprite_width) // 2
                     sprite_x = new_section_start + margin
