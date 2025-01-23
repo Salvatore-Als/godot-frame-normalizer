@@ -249,6 +249,19 @@ class SpriteSheetEditor(tk.Tk):
         processed_image = self.crop_transparent_borders(processed_image)
         return processed_image
 
+    def resize_from_window_size(self, image):
+        window_width = self.winfo_width()
+
+        # Ratio
+        original_width, original_height = image.size
+        ratio = original_height / original_width
+
+        new_width = window_width
+        new_height = int(window_width * ratio)
+
+        resized_image = image.resize((new_width, new_height))
+        return resized_image
+
     def display_grid(self):
         try:
             self.sprite_height = int(self.sprite_size_entry.get())
@@ -263,6 +276,8 @@ class SpriteSheetEditor(tk.Tk):
 
             # Display original image
             if self.original_image:
+                #resized_image = self.resize_from_window_size(self.original_image)
+              
                 photo = ImageTk.PhotoImage(self.original_image)
                 self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
                 self.canvas.original_image = photo
